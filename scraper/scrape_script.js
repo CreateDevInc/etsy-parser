@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 
-const { insertEtsyDataIntoDatabse, getMostRecentSales, shutDownDatabse } = require('./database');
+const { insertEtsyDataIntoDatabse, getMostRecentSales, shutDownDatabase } = require('./database');
 
 async function scrapeSaleHistory(page, activePageNumber, totalSales) {
   if (activePageNumber != 1) {
