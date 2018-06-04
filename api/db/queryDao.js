@@ -1,4 +1,5 @@
 const Sale = require('../../scraper/models/sale');
+const TotalSale = require('../../scraper/models/totalSales');
 
 function getSales(req) {
   if (req.query.company == '*')
@@ -14,6 +15,12 @@ function getSales(req) {
       .andWhere('date', '>=', req.query.start_date)
       .andWhere('date', '<=', req.query.end_date)
       .joinEager('company');
+}
+
+function getTotalSales(req) {
+  return TotalSale.query()
+    .select('sales.*')
+    .joinEager('company');
 }
 
 module.exports = {

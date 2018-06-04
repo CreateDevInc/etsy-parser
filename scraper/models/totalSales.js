@@ -10,6 +10,20 @@ class TotalSales extends Model {
   static get tableName() {
     return 'total_sales';
   }
+
+  static get relationMappings() {
+    const Company = require('./company');
+    return {
+      company: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: Company,
+        join: {
+          from: 'total_sales.company_id',
+          to: 'companies.id',
+        },
+      },
+    };
+  }
 }
 
 module.exports = TotalSales;
