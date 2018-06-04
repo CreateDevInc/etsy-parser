@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
+  <link href="https://unpkg.com/vuetify/dist/vuetify.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+
+<body>
+  <div id="app">
+    <v-app>
+      <v-content>
+        <v-container class="pa5" wrap>
+          <v-layout>
+            <v-flex xs6>
+              <v-layout column>
+                <h1>Current Scraped URLS</h1>
+                <a href="/" class="pa-3">To Query Page</a>
+                <v-btn @click="urlClicked(url)" v-for="url in urls" :key="url.id" class="ma-0 pa-0">{{url.url}}</v-btn>
+              </v-layout>
+            </v-flex>
+            <v-flex xs5 offset-xs1>
+              <v-text-field v-model="newURL" placeholder="Enter new url (include https:// before it)"></v-text-field>
+              <v-btn color="info" :disabled="newURL !== '' ? false : true" @click="addURL">Add URL</v-btn>
+              <v-spacer/>
+              <p>Selected URL:</p>
+              <p v-if="activeURL">{{activeURL.url}}</p>
+              <v-btn color="error" v-if="activeURL" @click="removeURL">Remove URL</v-btn>
+            </v-flex>
+          </v-layout>
+        </v-container>
+      </v-content>
+    </v-app>
+  </div>
+
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/vuetify/dist/vuetify.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      mounted() {
+        axios.get('/api/urls').then((data) => {
+          this.urls = data.data
+        }).catch((error) => {
+          console.error(error);
+        })
+      },
+      data() {
+        return {
+          urls: [],
+          newURL: '',
+          activeURL: null,
+        }
+      },
+      methods: {
+        urlClicked(url) {
+          this.activeURL = url;
+        },
+        addURL() {
+          axios.post('/api/urls', { url: this.newURL }).then((data) => {
+            this.urls.push(data.data);
+          }).catch((error) => {
+            console.error(error);
+          })
+        },
+        removeURL() {
+          axios.delete(`/api/urls/${this.activeURL.id}`).then((data) => {
+            this.urls = this.urls.filter(u => u.id !== this.activeURL.id);
+            this.activeURL = null;
+          }).catch((error) => {
+            console.error(error);
+          })
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>

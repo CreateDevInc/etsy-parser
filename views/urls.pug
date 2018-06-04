@@ -1,0 +1,15 @@
+extends layout
+
+block content
+  script(src="../javascript/url.js")
+  h1="Manage Etsy URLs"
+  table.table.table-hover
+    th
+      p="Current Etsy URL's"
+    each val in urls
+      tr
+        td= val
+
+
+
+

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
+  <link href="https://unpkg.com/vuetify/dist/vuetify.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+
+<body>
+  <div id="app">
+    <v-app>
+      <v-content>
+        <v-container class="pa-5">
+          <h1>Query Page</h1>
+          <a href="/urls" class="pa-3">To URL management</a>
+          <v-flex xs12 sm6 md4>
+            <v-select :items="companies" item-value="id" item-text="name" v-model="query.company" label="Select Company" single-line></v-select>
+          </v-flex>
+          <!-- Start Date-->
+          <v-flex xs12 sm6 md4>
+            <v-menu ref="menu_start" :close-on-content-click="false" v-model="menu_start" :nudge-right="40" :return-value.sync="query.start_date"
+              lazy transition="scale-transition" offset-y full-width min-width="290px">
+              <v-text-field slot="activator" v-model="query.start_date" label="Start Date" prepend-icon="event" readonly></v-text-field>
+              <v-date-picker v-model="query.start_date" @input="$refs.menu_start.save(query.start_date)"></v-date-picker>
+            </v-menu>
+          </v-flex>
+          <!-- End Date -->
+          <v-flex xs12 sm6 md4>
+            <v-menu ref="menu_end" :close-on-content-click="false" v-model="menu_end" :nudge-right="40" :return-value.sync="query.end_date"
+              lazy transition="scale-transition" offset-y full-width min-width="290px">
+              <v-text-field slot="activator" v-model="query.end_date" label="End Date" prepend-icon="event" readonly></v-text-field>
+              <v-date-picker v-model="query.end_date" @input="$refs.menu_end.save(query.end_date)"></v-date-picker>
+            </v-menu>
+          </v-flex>
+          <v-btn :color="queryReady ? 'info' : 'danger'" :disabled="!queryReady" @click="submitQuery">Submit Query</v-btn>
+          <!-- Results -->
+          <v-data-table :headers="results.headers" :items="results.data" hide-actions class="elevation-1">
+            <template slot="items" slot-scope="props">
+              <td>{{ props.item.company_id }}</td>
+              <td class="text-xs-right">{{ props.item.company.name }}</td>
+              <td class="text-xs-right">{{ props.item.product_id }}</td>
+              <td class="text-xs-right">{{ props.item.title }}</td>
+              <td class="text-xs-right">{{ props.item.date }}</td>
+            </template>
+          </v-data-table>
+        </v-container>
+      </v-content>
+    </v-app>
+  </div>
+
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/vuetify/dist/vuetify.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data() {
+        return {
+          menu_start: false,
+          menu_end: false,
+          query: {
+            company: null,
+            start_date: null,
+            end_date: null,
+          },
+          companies: [],
+          results: {
+            headers: [
+              {
+                text: 'Company Id',
+                align: 'left',
+                sortable: false,
+                value: 'company_id'
+              },
+              { text: 'Company Name', value: 'name' },
+              { text: 'Product Id', value: 'product_id' },
+              { text: 'Product Name', value: 'title' },
+              { text: 'Date Sold', value: 'date' },
+            ],
+            data: [],
+          }
+        }
+      },
+      computed: {
+        queryReady() {
+          return !!(this.query.company && this.query.start_date && this.query.end_date);
+        }
+      },
+      mounted() {
+        axios.get('/api/companies').then((data) => {
+          this.companies = data.data;
+          this.companies.unshift({ id: '*', name: 'All' })
+        }).catch(err => {
+          console.error(err);
+        })
+      },
+      methods: {
+        submitQuery() {
+          axios.get('/api/salesQuery', {
+            params: this.query,
+          }).then((data) => {
+            console.log(data.data);
+            this.results.data = data.data;
+          }).catch((err) => {
+            console.error(err);
+          })
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>

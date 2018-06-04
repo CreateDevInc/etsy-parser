@@ -10,7 +10,8 @@
     "knex:m:all": "yarn run knex:m:local && yarn run knex:m:prod",
     "knex:r:local": "KNEX_ENV=local node config/knex/rollbackLatest.js",
     "knex:r:prod": "KNEX_ENV=production node config/knex/rollbackLatest.js",
-    "knex:r:all": "yarn run knex:r:local && yarn run knex:r:prod"
+    "knex:r:all": "yarn run knex:r:local && yarn run knex:r:prod",
+    "start": "node bin/www"
   },
   "keywords": [],
   "author": "",
@@ -20,7 +21,6 @@
     "mysql": "^2.15.0",
     "objection": "^1.1.10",
     "puppeteer": "^1.4.0",
-    "why-is-node-running": "^2.0.2",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "express": "~4.16.0",

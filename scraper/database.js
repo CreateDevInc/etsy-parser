@@ -3,6 +3,7 @@ const { Model, transaction } = require('objection');
 const Company = require('./models/company');
 const Sale = require('./models/sale');
 const TotalSales = require('./models/totalSales');
+const EtsyURL = require('./models/etsyURL');
 
 // setup database connection
 const knex = require('knex')({
@@ -47,7 +48,7 @@ async function insertSales(data, date, company) {
   try {
     trx = await transaction.start(knex);
     for (let s of data.sales) {
-      await Sale.query(trx).insert(new Sale(s.listingId, s.title, dateToSQL(date), company.id));
+      await Sale.query(trx).insert(new Sale(s.product_id, s.title, dateToSQL(date), company.id));
     }
     await trx.commit();
   } catch (e) {
@@ -76,4 +77,11 @@ function shutDownDatabase() {
   knex.destroy();
 }
 
-module.exports = { insertEtsyDataIntoDatabse, getMostRecentSales, shutDownDatabase };
+function getURLsFromDatabase() {
+  return new Promise(async (resolve, reject) => {
+    const urls = await EtsyURL.query();
+    resolve(urls.map(x => x.url));
+  });
+}
+
+module.exports = { insertEtsyDataIntoDatabse, getMostRecentSales, shutDownDatabase, getURLsFromDatabase };

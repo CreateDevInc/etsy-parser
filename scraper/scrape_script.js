@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 
-const { insertEtsyDataIntoDatabse, getMostRecentSales, shutDownDatabase } = require('./database');
+const { insertEtsyDataIntoDatabse, getMostRecentSales, shutDownDatabase, getURLsFromDatabase } = require('./database');
 
 async function scrapeSaleHistory(page, activePageNumber, totalSales) {
   if (activePageNumber != 1) {
@@ -10,7 +10,7 @@ async function scrapeSaleHistory(page, activePageNumber, totalSales) {
 
   let sales = await page.$$eval('a.listing-link', el =>
     el.map(e => {
-      return { listingId: e.dataset.listingId, title: e.title };
+      return { product_id: e.dataset.listingId, title: e.title };
     }),
   );
   totalSales = [...totalSales, ...sales];
@@ -18,6 +18,33 @@ async function scrapeSaleHistory(page, activePageNumber, totalSales) {
   return totalSales;
 }
 
+function searchForNewSales(sales, oldSales) {
+  // this can be greatly optimized
+  if (oldSales.length === 0) {
+    if (sales.length >= 20) return { continue: false, sales: sales.slice(0, 20) };
+    else return { continue: true, sales: sales };
+  } else {
+    const index = findSubarray(sales, oldSales);
+    if (index !== -1) return { continue: false, sales: sales.slice(0, index) };
+    else return { continue: true, sales: sales };
+  }
+}
+
+function findSubarray(arr, subarr) {
+  for (var i = 0; i < 1 + (arr.length - subarr.length); i++) {
+    var j = 0;
+    for (; j < subarr.length; j++) if (arr[i + j].product_id != subarr[j].product_id) break;
+    if (j == subarr.length) return i;
+  }
+  return -1;
+}
+/**
+ * Gets company Name, Number of Sales
+ *
+ * @param {Page} page
+ * @param {String} url
+ * @returns
+ */
 async function scrapeOrganization(page, url) {
   let name = await page.$eval('.shop-name-and-title-container h1', el => el.innerText);
   let numberOfSales = await page.$eval('.shop-sales', el => parseInt(el.innerText.split(' ')[0]));
@@ -29,16 +56,28 @@ async function scrapeOrganization(page, url) {
     let activePageNumber = 1;
     let previousSales = await getMostRecentSales(url);
 
+    let sales = [];
+    let continueLoop = true;
+
     await page.setViewport({ width: 1200, height: 700 });
 
     do {
       allSales = await scrapeSaleHistory(page, activePageNumber, allSales);
-    } while ((await page.$(`a.page-${++activePageNumber}`)) && activePageNumber < 3);
+      const result = searchForNewSales(allSales, previousSales); // has continue property and sales property.
+      sales = result.sales;
+      continueLoop = result.continue;
+    } while ((await page.$(`a.page-${++activePageNumber}`)) && continueLoop);
 
-    return { name, numberOfSales, publicSales: true, url, sales: allSales };
+    return { name, numberOfSales, publicSales: true, url, sales };
   } else return { name, numberOfSales, publicSales: false, url }; // If Private
 }
-
+/**
+ * Opens a new tab in the browser with the url
+ *
+ * @param {Browser} browser
+ * @param {String} url
+ * @returns
+ */
 async function scrapeWebsite(browser, url) {
   const page = await browser.newPage();
   await page.goto(url);
@@ -46,7 +85,11 @@ async function scrapeWebsite(browser, url) {
   await page.close();
   return data;
 }
-
+/**
+ * Initializes Pupeteer and DB, Scrapes All URLS, Then Shuts down Pupeteer and DB
+ *
+ * @param {String} urls
+ */
 async function etsyScraper(urls) {
   console.log('Initializing Scraping Script');
 
@@ -76,4 +119,6 @@ async function etsyScraper(urls) {
   console.log('Scraping Script Complete');
 }
 
-etsyScraper(['https://www.etsy.com/shop/GirlFridayHome', 'https://www.etsy.com/shop/periwinkleinc']);
+getURLsFromDatabase().then(urls => {
+  etsyScraper(urls);
+});

@@ -33,11 +33,20 @@ exports.up = function(knex, Promise) {
       t.integer('number_of_sales');
       t.integer('company_id');
       t.date('date');
+    })
+    .createTable('urls', t => {
+      t
+        .increments('id')
+        .unique()
+        .primary()
+        .notNullable();
+      t.string('url');
     });
 };
 
 exports.down = function(knex, Promise) {
   return knex.schema
+    .dropTable('urls')
     .dropTable('total_sales')
     .dropTable('sales')
     .dropTable('companies');

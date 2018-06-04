@@ -10,6 +10,20 @@ class Company extends Model {
   static get tableName() {
     return 'companies';
   }
+
+  static get relationMappings() {
+    const Sale = require('./sale');
+    return {
+      sales: {
+        relation: Model.HasManyRelation,
+        modelClass: Sale,
+        join: {
+          from: 'companies.id',
+          to: 'sales.company_id',
+        },
+      },
+    };
+  }
 }
 
 module.exports = Company;
