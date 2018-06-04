@@ -101,6 +101,10 @@
             params: this.query,
           }).then((data) => {
             console.log(data.data);
+            data.data.map(x => {
+              x.date = x.date.slice(0, 10);
+              return x;
+            })
             this.results.data = data.data;
           }).catch((err) => {
             console.error(err);
