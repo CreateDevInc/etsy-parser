@@ -50,7 +50,7 @@ async function scrapeOrganization(page, url) {
   if (await page.$('.shop-sales a')) {
     await page.screenshot({ path: 'one.png' });
     await page.goto('about:blank');
-    await page.goto('https://www.etsy.com/shop/GirlFridayHome/sold', { timeout: 1 });
+    await page.goto('https://www.etsy.com/shop/GirlFridayHome/sold', { waitUntil: 'domcontentloaded' });
     // await Promise.all([page.click('.shop-sales a'), page.waitForNavigation()]); // click on sales
     await page.screenshot({ path: 'two.png' });
     let allSales = [];
