@@ -6,8 +6,8 @@ const { insertEtsyDataIntoDatabse, getMostRecentSales, shutDownDatabase, getURLs
 async function scrapeSaleHistory(page, activePageNumber, totalSales) {
   if (activePageNumber != 1) {
     const [response] = await Promise.all([page.waitForNavigation(), page.click(`a.page-${activePageNumber}`)]); // click on page
-  }	
-let sales = await page.$$eval('a.listing-link', el =>
+  }
+  let sales = await page.$$eval('a.listing-link', el =>
     el.map(e => {
       return { product_id: e.dataset.listingId, title: e.title };
     }),
@@ -44,11 +44,15 @@ function findSubarray(arr, subarr) {
  * @param {String} url
  * @returns
  */
-async function scrapeOrganization(page, url) {
+async function scrapeOrganization(page, url, browser) {
   let name = await page.$eval('.shop-name-and-title-container h1', el => el.innerText);
   let numberOfSales = await page.$eval('.shop-sales', el => parseInt(el.innerText.split(' ')[0]));
   if (await page.$('.shop-sales a')) {
-    await Promise.all([page.click('.shop-sales a'), page.waitForNavigation()]); // click on sales
+    // await Promise.all([page.click('.shop-sales a'), page.waitForNavigation()]); // click on sales
+    const u = await page.$eval('.shop-sales a', el => el.href);
+    const salesPage = await browser.newPage();
+    await salesPage.goto(u);
+
     let allSales = [];
     let activePageNumber = 1;
     let previousSales = await getMostRecentSales(url);
@@ -58,11 +62,12 @@ async function scrapeOrganization(page, url) {
 
     await page.setViewport({ width: 1200, height: 700 });
     do {
-      allSales = await scrapeSaleHistory(page, activePageNumber, allSales);
+      allSales = await scrapeSaleHistory(salesPage, activePageNumber, allSales);
       const result = searchForNewSales(allSales, previousSales); // has continue property and sales property.
       sales = result.sales;
       continueLoop = result.continue;
-    } while ((await page.$(`a.page-${++activePageNumber}`)) && continueLoop);
+    } while ((await salesPage.$(`a.page-${++activePageNumber}`)) && continueLoop);
+    salesPage.close();
     return { name, numberOfSales, publicSales: true, url, sales };
   } else return { name, numberOfSales, publicSales: false, url }; // If Private
 }
@@ -76,7 +81,7 @@ async function scrapeOrganization(page, url) {
 async function scrapeWebsite(browser, url) {
   const page = await browser.newPage();
   await page.goto(url);
-  const data = await scrapeOrganization(page, url);
+  const data = await scrapeOrganization(page, url, browser);
   await page.close();
   return data;
 }
@@ -90,7 +95,7 @@ async function etsyScraper(urls) {
 
   const date = new Date(Date.now());
   date.setDate(date.getDate() - 1);
-  const browser = await puppeteer.launch({ headless: true, args: ['--disable-dev-shm-usage', '--window-size=1200,700', '--no-sandbox'] });
+  const browser = await puppeteer.launch({ headless: false, args: ['--disable-dev-shm-usage', '--window-size=1200,700', '--no-sandbox'] });
 
   console.log('Starting Scraping');
 
@@ -98,8 +103,6 @@ async function etsyScraper(urls) {
     console.log(`Scraping ${u}`);
 
     const data = await scrapeWebsite(browser, u);
-
-console.log(JSON.stringify(data, null, 4));
 
     console.log(`Successfully scraped ${u}`);
     console.log('Starting Database Insertion');
