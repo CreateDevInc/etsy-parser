@@ -11,7 +11,7 @@
     "knex:r:local": "KNEX_ENV=local node config/knex/rollbackLatest.js",
     "knex:r:prod": "KNEX_ENV=production node config/knex/rollbackLatest.js",
     "knex:r:all": "yarn run knex:r:local && yarn run knex:r:prod",
-    "start": "node bin/www"
+    "start": "node app.js"
   },
   "keywords": [],
   "author": "",
