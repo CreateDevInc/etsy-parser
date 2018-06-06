@@ -52,6 +52,7 @@ async function scrapeOrganization(page, url, browser) {
     const u = await page.$eval('.shop-sales a', el => el.href);
     const salesPage = await browser.newPage();
     await salesPage.goto(u);
+    await salesPage.screenshot({ path: 'example.png' });
 
     let allSales = [];
     let activePageNumber = 1;
@@ -96,7 +97,6 @@ async function etsyScraper(urls) {
   const date = new Date(Date.now());
   date.setDate(date.getDate() - 1);
   const browser = await puppeteer.launch({ headless: true, args: ['--disable-dev-shm-usage', '--window-size=1200,700', '--no-sandbox', '--disable-setuid-sandbox'] });
-  await page.screenshot({ path: 'example.png' });
 
   console.log('Starting Scraping');
 
