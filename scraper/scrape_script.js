@@ -48,12 +48,8 @@ async function scrapeOrganization(page, url) {
   let name = await page.$eval('.shop-name-and-title-container h1', el => el.innerText);
   let numberOfSales = await page.$eval('.shop-sales', el => parseInt(el.innerText.split(' ')[0]));
   if (await page.$('.shop-sales a')) {
-    // await Promise.all([page.click('.shop-sales a'), page.waitForNavigation()]); // click on sales
+    await Promise.all([page.click('.shop-sales a'), page.waitForNavigation()]); // click on sales
     // const href = await page.$eval('.shop-sales a', el => el.href);
-    const browser = await puppeteer.launch({ headless: true, args: ['--disable-dev-shm-usage', '--window-size=1200,700', '--no-sandbox', '--disable-setuid-sandbox'] });
-    const salesPage = await browser.newPage();
-    await salesPage.goto('https://www.etsy.com/shop/GirlFridayHome/sold');
-    await salesPage.screenshot({ path: 'example.png' });
 
     let allSales = [];
     let activePageNumber = 1;
@@ -62,20 +58,17 @@ async function scrapeOrganization(page, url) {
     let sales = [];
     let continueLoop = true;
 
-    await salesPage.setViewport({ width: 1200, height: 700 });
+    await page.setViewport({ width: 1200, height: 700 });
     do {
-      allSales = await scrapeSaleHistory(salesPage, activePageNumber, allSales);
+      allSales = await scrapeSaleHistory(page, activePageNumber, allSales);
       const result = searchForNewSales(allSales, previousSales); // has continue property and sales property.
       sales = result.sales;
       continueLoop = result.continue;
-    } while ((await salesPage.$(`a.page-${++activePageNumber}`)) && continueLoop);
-
-    await salesPage.close();
-    await browser.close();
-
+    } while ((await page.$(`a.page-${++activePageNumber}`)) && continueLoop);
     return { name, numberOfSales, publicSales: true, url, sales };
   } else return { name, numberOfSales, publicSales: false, url }; // If Private
 }
+
 /**
  * Opens a new tab in the browser with the url
  *
@@ -120,6 +113,14 @@ async function etsyScraper(urls) {
   console.log('Shutting Down Scraping Script');
 
   await browser.close();
+
+  const b = await puppeteer.launch({ headless: true, args: ['--disable-dev-shm-usage', '--window-size=1200,700', '--no-sandbox', '--disable-setuid-sandbox'] });
+  const page = await b.newPage();
+  await page.goto('https://www.etsy.com/shop/GirlFridayHome/sold');
+  await page.screenshot({ path: 'example.png' });
+
+  await b.close();
+
   shutDownDatabase();
 
   console.log('Scraping Script Complete');
