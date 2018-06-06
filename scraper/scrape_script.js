@@ -97,7 +97,7 @@ async function etsyScraper(urls) {
   // date.setDate(date.getDate() - 1);
   const browser = await puppeteer.launch({ headless: true, args: ['--disable-dev-shm-usage', '--window-size=1200,700', '--no-sandbox', '--disable-setuid-sandbox'] });
   const page = await browser.newPage();
-  await page.goto('https://www.etsy.com/shop/GirlFridayHome/sold');
+  await page.goto('https://www.etsy.com/shop/periwinkleinc');
   await page.screenshot({ path: 'example.png' });
   await page.close();
   await browser.close();
