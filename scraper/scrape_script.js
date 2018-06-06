@@ -96,6 +96,7 @@ async function etsyScraper(urls) {
   const date = new Date(Date.now());
   date.setDate(date.getDate() - 1);
   const browser = await puppeteer.launch({ headless: true, args: ['--disable-dev-shm-usage', '--window-size=1200,700', '--no-sandbox', '--disable-setuid-sandbox'] });
+  await page.screenshot({ path: 'example.png' });
 
   console.log('Starting Scraping');
 
