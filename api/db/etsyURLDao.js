@@ -1,5 +1,5 @@
 // import { transaction } from 'objection';
-const EtsyURL = require('../../scraper/models/etsyurl');
+const EtsyURL = require('../../scraper/models/etsyURL');
 
 function get() {
   return EtsyURL.query();
