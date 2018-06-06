@@ -44,14 +44,15 @@ function findSubarray(arr, subarr) {
  * @param {String} url
  * @returns
  */
-async function scrapeOrganization(page, url, browser) {
+async function scrapeOrganization(page, url) {
   let name = await page.$eval('.shop-name-and-title-container h1', el => el.innerText);
   let numberOfSales = await page.$eval('.shop-sales', el => parseInt(el.innerText.split(' ')[0]));
   if (await page.$('.shop-sales a')) {
     // await Promise.all([page.click('.shop-sales a'), page.waitForNavigation()]); // click on sales
-    const u = await page.$eval('.shop-sales a', el => el.href);
+    const href = await page.$eval('.shop-sales a', el => el.href);
+    const browser = await puppeteer.launch({ headless: true, args: ['--disable-dev-shm-usage', '--window-size=1200,700', '--no-sandbox', '--disable-setuid-sandbox'] });
     const salesPage = await browser.newPage();
-    await salesPage.goto(u);
+    await salesPage.goto(href);
     await salesPage.screenshot({ path: 'example.png' });
 
     let allSales = [];
@@ -61,14 +62,17 @@ async function scrapeOrganization(page, url, browser) {
     let sales = [];
     let continueLoop = true;
 
-    await page.setViewport({ width: 1200, height: 700 });
+    await salesPage.setViewport({ width: 1200, height: 700 });
     do {
       allSales = await scrapeSaleHistory(salesPage, activePageNumber, allSales);
       const result = searchForNewSales(allSales, previousSales); // has continue property and sales property.
       sales = result.sales;
       continueLoop = result.continue;
     } while ((await salesPage.$(`a.page-${++activePageNumber}`)) && continueLoop);
-    salesPage.close();
+
+    await salesPage.close();
+    await browser.close();
+
     return { name, numberOfSales, publicSales: true, url, sales };
   } else return { name, numberOfSales, publicSales: false, url }; // If Private
 }
