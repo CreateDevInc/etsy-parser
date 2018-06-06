@@ -1,5 +1,5 @@
 // import { transaction } from 'objection';
-const Company = require('/../../scraper/models/company');
+const Company = require('../../scraper/models/company');
 
 function get() {
   return Company.query();
