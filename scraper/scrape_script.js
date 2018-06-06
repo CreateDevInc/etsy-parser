@@ -49,10 +49,10 @@ async function scrapeOrganization(page, url) {
   let numberOfSales = await page.$eval('.shop-sales', el => parseInt(el.innerText.split(' ')[0]));
   if (await page.$('.shop-sales a')) {
     // await Promise.all([page.click('.shop-sales a'), page.waitForNavigation()]); // click on sales
-    const href = await page.$eval('.shop-sales a', el => el.href);
+    // const href = await page.$eval('.shop-sales a', el => el.href);
     const browser = await puppeteer.launch({ headless: true, args: ['--disable-dev-shm-usage', '--window-size=1200,700', '--no-sandbox', '--disable-setuid-sandbox'] });
     const salesPage = await browser.newPage();
-    await salesPage.goto(href);
+    await salesPage.goto('https://www.etsy.com/shop/GirlFridayHome/sold');
     await salesPage.screenshot({ path: 'example.png' });
 
     let allSales = [];
