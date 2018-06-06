@@ -50,7 +50,7 @@ async function scrapeOrganization(page, url) {
   if (await page.$('.shop-sales a')) {
     await page.screenshot({ path: 'one.png' });
     await page.goto('about:blank');
-    await page.goto('https://www.etsy.com/shop/GirlFridayHome/sold', { waitUntil: 'domcontentloaded' });
+    await page.goto('https://www.etsy.com/shop/GirlFridayHome/sold');
     // await Promise.all([page.click('.shop-sales a'), page.waitForNavigation()]); // click on sales
     await page.screenshot({ path: 'two.png' });
     let allSales = [];
@@ -91,33 +91,35 @@ async function scrapeWebsite(browser, url) {
  * @param {String} urls
  */
 async function etsyScraper(urls) {
-  console.log('Initializing Scraping Script');
+  // console.log('Initializing Scraping Script');
 
-  const date = new Date(Date.now());
-  date.setDate(date.getDate() - 1);
+  // const date = new Date(Date.now());
+  // date.setDate(date.getDate() - 1);
   const browser = await puppeteer.launch({ headless: true, args: ['--disable-dev-shm-usage', '--window-size=1200,700', '--no-sandbox', '--disable-setuid-sandbox'] });
+  const page = await browser.newPage();
+  await page.goto('https://www.etsy.com/shop/GirlFridayHome/sold');
+  await page.screenshot({ path: 'example.png' });
+  // console.log('Starting Scraping');
 
-  console.log('Starting Scraping');
+  // for (const u of urls) {
+  //   console.log(`Scraping ${u}`);
 
-  for (const u of urls) {
-    console.log(`Scraping ${u}`);
+  //   const data = await scrapeWebsite(browser, u);
 
-    const data = await scrapeWebsite(browser, u);
+  //   console.log(`Successfully scraped ${u}`);
+  //   console.log('Starting Database Insertion');
 
-    console.log(`Successfully scraped ${u}`);
-    console.log('Starting Database Insertion');
+  //   await insertEtsyDataIntoDatabse(data, date);
 
-    await insertEtsyDataIntoDatabse(data, date);
+  //   console.log('Database Insertion Completed');
+  // }
 
-    console.log('Database Insertion Completed');
-  }
+  // console.log('Shutting Down Scraping Script');
 
-  console.log('Shutting Down Scraping Script');
+  // await browser.close();
+  // shutDownDatabase();
 
-  await browser.close();
-  shutDownDatabase();
-
-  console.log('Scraping Script Complete');
+  // console.log('Scraping Script Complete');
 }
 
 getURLsFromDatabase().then(urls => {
