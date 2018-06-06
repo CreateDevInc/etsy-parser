@@ -45,5 +45,6 @@ router
   .delete(urlController.deleteId);
 
 router.route('/salesQuery').get(queryController.getSales);
+router.route('/totalSalesQuery').get(queryController.getTotalSales);
 
 module.exports = router;

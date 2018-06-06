@@ -17,10 +17,11 @@ function putById(url) {
   return EtsyURL.query().upsertGraphAndFetch(url);
 }
 
-function deleteById(id) {
-  return EtsyURL.query()
+async function deleteById(id) {
+  await EtsyURL.query()
     .delete()
     .findOne('id', id);
+  return 'ok';
 }
 
 module.exports = {

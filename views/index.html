@@ -15,33 +15,43 @@
           <h1>Query Page</h1>
           <a href="/urls" class="pa-3">To URL management</a>
           <v-flex xs12 sm6 md4>
-            <v-select :items="companies" item-value="id" item-text="name" v-model="query.company" label="Select Company" single-line></v-select>
+            <v-radio-group v-model="query.type">
+              <v-radio v-for="q in queryTypes" :key="q.id" :label="q.name" :value="q.id"></v-radio>
+            </v-radio-group>
+            <v-flex>
+              <v-select :items="companies" item-value="id" item-text="name" v-model="query.company" label="Select Company" single-line></v-select>
+            </v-flex>
+            <!-- Start Date-->
+            <v-flex>
+              <v-menu ref="menu_start" :close-on-content-click="false" v-model="menu_start" :nudge-right="40" :return-value.sync="query.start_date"
+                lazy transition="scale-transition" offset-y full-width min-width="290px">
+                <v-text-field slot="activator" v-model="query.start_date" label="Start Date" prepend-icon="event" readonly></v-text-field>
+                <v-date-picker v-model="query.start_date" @input="$refs.menu_start.save(query.start_date)"></v-date-picker>
+              </v-menu>
+            </v-flex>
+            <!-- End Date -->
+            <v-flex>
+              <v-menu ref="menu_end" :close-on-content-click="false" v-model="menu_end" :nudge-right="40" :return-value.sync="query.end_date"
+                lazy transition="scale-transition" offset-y full-width min-width="290px">
+                <v-text-field slot="activator" v-model="query.end_date" label="End Date" prepend-icon="event" readonly></v-text-field>
+                <v-date-picker v-model="query.end_date" @input="$refs.menu_end.save(query.end_date)"></v-date-picker>
+              </v-menu>
+            </v-flex>
+            <v-flex>
+              <v-btn :color="queryReady ? 'info' : 'danger'" :disabled="!queryReady" @click="submitQuery">Submit Query</v-btn>
+              <v-btn color="success" :disabled="results.data.length == 0" @click="exportToCSV">Export to CSV</v-btn>
+            </v-flex>
           </v-flex>
-          <!-- Start Date-->
-          <v-flex xs12 sm6 md4>
-            <v-menu ref="menu_start" :close-on-content-click="false" v-model="menu_start" :nudge-right="40" :return-value.sync="query.start_date"
-              lazy transition="scale-transition" offset-y full-width min-width="290px">
-              <v-text-field slot="activator" v-model="query.start_date" label="Start Date" prepend-icon="event" readonly></v-text-field>
-              <v-date-picker v-model="query.start_date" @input="$refs.menu_start.save(query.start_date)"></v-date-picker>
-            </v-menu>
-          </v-flex>
-          <!-- End Date -->
-          <v-flex xs12 sm6 md4>
-            <v-menu ref="menu_end" :close-on-content-click="false" v-model="menu_end" :nudge-right="40" :return-value.sync="query.end_date"
-              lazy transition="scale-transition" offset-y full-width min-width="290px">
-              <v-text-field slot="activator" v-model="query.end_date" label="End Date" prepend-icon="event" readonly></v-text-field>
-              <v-date-picker v-model="query.end_date" @input="$refs.menu_end.save(query.end_date)"></v-date-picker>
-            </v-menu>
-          </v-flex>
-          <v-btn :color="queryReady ? 'info' : 'danger'" :disabled="!queryReady" @click="submitQuery">Submit Query</v-btn>
           <!-- Results -->
-          <v-data-table :headers="results.headers" :items="results.data" hide-actions class="elevation-1">
+          <v-data-table :headers="query.type == 1 ? results.dumpHeaders : results.totalsHeaders" :items="results.data" hide-actions
+            class="elevation-1">
             <template slot="items" slot-scope="props">
-              <td>{{ props.item.company_id }}</td>
-              <td class="text-xs-right">{{ props.item.company.name }}</td>
+              <td class="text-xs-right">{{ props.item.name }}</td>
               <td class="text-xs-right">{{ props.item.product_id }}</td>
               <td class="text-xs-right">{{ props.item.title }}</td>
-              <td class="text-xs-right">{{ props.item.date }}</td>
+              <td class="text-xs-right" v-if="query.type == 1">{{ props.item.date }}</td>
+              <td class="text-xs-right" v-else>{{ props.item.count }}</td>
+
             </template>
           </v-data-table>
         </v-container>
@@ -52,65 +62,102 @@
   <script src="https://unpkg.com/vue/dist/vue.js"></script>
   <script src="https://unpkg.com/vuetify/dist/vuetify.js"></script>
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script type="text/javascript" src="lib/require.js"></script>
   <script>
-    new Vue({
-      el: '#app',
-      data() {
-        return {
-          menu_start: false,
-          menu_end: false,
-          query: {
-            company: null,
-            start_date: null,
-            end_date: null,
-          },
-          companies: [],
-          results: {
-            headers: [
-              {
-                text: 'Company Id',
-                align: 'left',
-                sortable: false,
-                value: 'company_id'
-              },
-              { text: 'Company Name', value: 'name' },
-              { text: 'Product Id', value: 'product_id' },
-              { text: 'Product Name', value: 'title' },
-              { text: 'Date Sold', value: 'date' },
-            ],
-            data: [],
+    require(['lib/json2csv'], function (json2csv) {
+
+      new Vue({
+        el: '#app',
+        data() {
+          return {
+            menu_start: false,
+            menu_end: false,
+            query: {
+              type: 1,
+              company: null,
+              start_date: null,
+              end_date: null,
+            },
+            queryTypes: [{
+              id: 1,
+              name: 'Dump',
+            }, {
+              id: 2,
+              name: 'Product Sales Totals'
+            }],
+            companies: [],
+            results: {
+              totalsHeaders: [
+                { text: 'Company Name', value: 'name' },
+                { text: 'Product Id', value: 'product_id' },
+                { text: 'Product Name', value: 'title' },
+                { text: 'Count', value: 'count' }
+              ],
+              dumpHeaders: [
+                { text: 'Company Name', value: 'name' },
+                { text: 'Product Id', value: 'product_id' },
+                { text: 'Product Name', value: 'title' },
+                { text: 'Date Sold', value: 'date' },
+              ],
+              data: [],
+            }
           }
-        }
-      },
-      computed: {
-        queryReady() {
-          return !!(this.query.company && this.query.start_date && this.query.end_date);
-        }
-      },
-      mounted() {
-        axios.get('/api/companies').then((data) => {
-          this.companies = data.data;
-          this.companies.unshift({ id: '*', name: 'All' })
-        }).catch(err => {
-          console.error(err);
-        })
-      },
-      methods: {
-        submitQuery() {
-          axios.get('/api/salesQuery', {
-            params: this.query,
-          }).then((data) => {
-            console.log(data.data);
-            data.data.map(x => {
-              x.date = x.date.slice(0, 10);
-              return x;
-            })
-            this.results.data = data.data;
-          }).catch((err) => {
+        },
+        computed: {
+          queryReady() {
+            return !!(this.query.company && this.query.start_date && this.query.end_date);
+          }
+        },
+        mounted() {
+          axios.get('/api/companies').then((data) => {
+            this.companies = data.data;
+            this.companies.unshift({ id: '*', name: 'All' })
+          }).catch(err => {
             console.error(err);
           })
+        },
+        methods: {
+          submitQuery() {
+            switch (this.query.type) {
+              case 1:
+                axios.get('/api/salesQuery', {
+                  params: this.query,
+                }).then((data) => {
+                  this.results.data = data.data;
+                }).catch((err) => {
+                  console.error(err);
+                })
+                break;
+              case 2:
+                axios.get('/api/totalSalesQuery', {
+                  params: this.query,
+                }).then((data) => {
+                  this.results.data = data.data;
+                }).catch((err) => {
+                  console.error(err);
+                })
+                break;
+            }
+          },
+          exportToCSV() {
+            const parser = new json2csv.Parser();
+            const csv = parser.parse(this.results.data);
+            this.download("dump.csv", csv);
+          },
+          download(filename, text) {
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
+          }
         }
-      }
+      })
     })
   </script>
 </body>
