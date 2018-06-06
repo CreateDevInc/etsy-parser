@@ -48,10 +48,7 @@ async function scrapeOrganization(page, url) {
   let name = await page.$eval('.shop-name-and-title-container h1', el => el.innerText);
   let numberOfSales = await page.$eval('.shop-sales', el => parseInt(el.innerText.split(' ')[0]));
   if (await page.$('.shop-sales a')) {
-    await page.screenshot({ path: 'one.png' });
-    await page.goto('https://www.etsy.com/shop/periwinkleinc', { waitUntil: 'domcontentloaded' });
-    // await Promise.all([page.click('.shop-sales a'), page.waitForNavigation()]); // click on sales
-    await page.screenshot({ path: 'two.png' });
+    await Promise.all([page.click('.shop-sales a'), page.waitForNavigation()]); // click on sales
     let allSales = [];
     let activePageNumber = 1;
     let previousSales = await getMostRecentSales(url);

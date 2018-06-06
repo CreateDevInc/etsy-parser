@@ -9,10 +9,10 @@ const EtsyURL = require('./models/etsyURL');
 const knex = require('knex')({
   client: 'mysql',
   connection: {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB,
+    host: process.env.DB_HOST || '127.0.0.1',
+    user: process.env.DB_USERNAME || 'root',
+    password: process.env.DB_PASSWORD || 'password',
+    database: process.env.DB || 'etsy_scraper',
   },
   pool: { min: 0, max: 10 },
 });
