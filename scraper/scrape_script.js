@@ -99,8 +99,8 @@ async function etsyScraper(urls) {
   const page = await browser.newPage();
   await page.goto('https://www.etsy.com/shop/GirlFridayHome/sold');
   await page.screenshot({ path: 'example.png' });
-  page.close();
-  browser.close();
+  await page.close();
+  await browser.close();
   shutDownDatabase();
   // console.log('Starting Scraping');
 
