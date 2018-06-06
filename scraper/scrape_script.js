@@ -49,7 +49,8 @@ async function scrapeOrganization(page, url) {
   let numberOfSales = await page.$eval('.shop-sales', el => parseInt(el.innerText.split(' ')[0]));
   if (await page.$('.shop-sales a')) {
     await Promise.all([page.click('.shop-sales a'), page.waitForNavigation()]); // click on sales
-    // const href = await page.$eval('.shop-sales a', el => el.href);
+    const d = await page.console();
+    console.log(d);
 
     let allSales = [];
     let activePageNumber = 1;
@@ -113,14 +114,6 @@ async function etsyScraper(urls) {
   console.log('Shutting Down Scraping Script');
 
   await browser.close();
-
-  const b = await puppeteer.launch({ headless: true, args: ['--disable-dev-shm-usage', '--window-size=1200,700', '--no-sandbox', '--disable-setuid-sandbox'] });
-  const page = await b.newPage();
-  await page.goto('https://www.etsy.com/shop/GirlFridayHome/sold');
-  await page.screenshot({ path: 'example.png' });
-
-  await b.close();
-
   shutDownDatabase();
 
   console.log('Scraping Script Complete');
