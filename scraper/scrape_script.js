@@ -49,7 +49,7 @@ async function scrapeOrganization(page, url) {
   let numberOfSales = await page.$eval('.shop-sales', el => parseInt(el.innerText.split(' ')[0]));
   if (await page.$('.shop-sales a')) {
     await Promise.all([page.click('.shop-sales a'), page.waitForNavigation()]); // click on sales
-    const d = await page.console();
+    const d = await page.content();
     console.log(d);
 
     let allSales = [];
