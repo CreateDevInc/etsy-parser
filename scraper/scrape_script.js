@@ -49,6 +49,7 @@ async function scrapeOrganization(page, url) {
   let numberOfSales = await page.$eval('.shop-sales', el => parseInt(el.innerText.split(' ')[0]));
   if (await page.$('.shop-sales a')) {
     await page.screenshot({ path: 'one.png' });
+    await page.goto('about:blank');
     await page.goto('https://www.etsy.com/shop/GirlFridayHome/sold');
     // await Promise.all([page.click('.shop-sales a'), page.waitForNavigation()]); // click on sales
     await page.screenshot({ path: 'two.png' });
