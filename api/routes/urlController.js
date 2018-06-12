@@ -1,4 +1,5 @@
 const { get, post, put, del, getById, putById, deleteById } = require('../db/etsyURLDao');
+const { etsyScraper } = require('../../scraper/scrape_script_module');
 
 module.exports = {
   async get(req, res, next) {
@@ -10,7 +11,9 @@ module.exports = {
   },
   async post(req, res, next) {
     try {
-      res.send(await post(req.body));
+      const url = await post(req.body);
+      await etsyScraper([url.url]);
+      res.send(url);
     } catch (err) {
       next(err);
     }

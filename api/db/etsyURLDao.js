@@ -2,7 +2,9 @@
 const EtsyURL = require('../../scraper/models/etsyURL');
 
 function get() {
-  return EtsyURL.query();
+  return EtsyURL.query()
+    .rightJoin('companies', 'urls.url', 'companies.url')
+    .select('urls.id', 'urls.url', 'companies.public_sales');
 }
 
 function post(url) {

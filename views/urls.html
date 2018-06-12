@@ -13,11 +13,14 @@
       <v-content>
         <v-container class="pa5" wrap>
           <v-layout>
+            <div class="loading-overlay" v-if="loading">
+              <v-progress-circular class="loader" size="100" :width="10" indeterminate color="primary"></v-progress-circular>
+            </div>
             <v-flex xs6>
               <v-layout column>
                 <h1>Current Scraped URLS</h1>
                 <a href="/" class="pa-3">To Query Page</a>
-                <v-btn @click="urlClicked(url)" v-for="url in urls" :key="url.id" class="ma-0 pa-0">{{url.url}}</v-btn>
+                <v-btn @click="urlClicked(url)" :class="{redText: url.public_sales}" v-for="url in urls" :key="url.id" class="ma-0 pa-0">{{url.url}}</v-btn>
               </v-layout>
             </v-flex>
             <v-flex xs5 offset-xs1>
@@ -42,6 +45,7 @@
       el: '#app',
       mounted() {
         axios.get('/api/urls').then((data) => {
+          console.log(data.data);
           this.urls = data.data
         }).catch((error) => {
           console.error(error);
@@ -52,6 +56,7 @@
           urls: [],
           newURL: '',
           activeURL: null,
+          loading: false,
         }
       },
       methods: {
@@ -59,8 +64,10 @@
           this.activeURL = url;
         },
         addURL() {
+          this.loading = true;
           axios.post('/api/urls', { url: this.newURL }).then((data) => {
             this.urls.push(data.data);
+            this.loading = false;
           }).catch((error) => {
             console.error(error);
           })
@@ -76,6 +83,30 @@
       }
     })
   </script>
+  <style>
+    .loading-overlay {
+      position: fixed;
+      display: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, .3);
+      z-index: 10000;
+
+    }
+
+    .loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .redText {
+      color: #f44336 !important;
+    }
+  </style>
 </body>
 
 </html>

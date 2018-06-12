@@ -19,7 +19,11 @@
               <v-radio v-for="q in queryTypes" :key="q.id" :label="q.name" :value="q.id"></v-radio>
             </v-radio-group>
             <v-flex>
-              <v-select :items="companies" item-value="id" item-text="name" v-model="query.company" label="Select Company" single-line></v-select>
+              <v-select :items="companies" item-value="id" item-text="name" v-model="query.company" label="Select Company" single-line>
+                <template slot="item" slot-scope="data">
+                  <v-list-tile-sub-title :class="{redtext: data.item.public_sales}">{{data.item.name}}</v-list-tile-sub-title>
+                </template>
+              </v-select>
             </v-flex>
             <!-- Start Date-->
             <v-flex>
@@ -160,6 +164,11 @@
       })
     })
   </script>
+  <style>
+    .redtext {
+      color: #f44336 !important;
+    }
+  </style>
 </body>
 
 </html>
