@@ -1,11 +1,12 @@
 const { Model } = require('objection');
 
 class Company extends Model {
-  constructor(name, publicSales, url) {
+  constructor(name, publicSales, url, firstScrapedDate) {
     super();
     this.name = name;
     this.public_sales = publicSales;
     this.url = url;
+    this.first_scraped_date = firstScrapedDate;
   }
   static get tableName() {
     return 'companies';

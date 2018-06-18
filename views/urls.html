@@ -45,7 +45,6 @@
       el: '#app',
       mounted() {
         axios.get('/api/urls').then((data) => {
-          console.log(data.data);
           this.urls = data.data
         }).catch((error) => {
           console.error(error);

@@ -33,7 +33,16 @@ async function insertEtsyDataIntoDatabse(data, date) {
 
 async function insertCompany(data, date) {
   let company = await Company.query().findOne({ url: data.url });
-  if (!company) company = await Company.query().insertAndFetch(new Company(data.name, data.publicSales, data.url));
+  if (!company) company = await Company.query().insertAndFetch(new Company(data.name, data.publicSales, data.url, dateToSQL(date)));
+  else if (!company.first_scraped_date && company.public_sales) {
+    const firstSale = await Sale.query()
+      .orderBy('date')
+      .first();
+    company.first_scraped_date = firstSale.date;
+    await Company.query()
+      .update({ first_scraped_date: company.first_scraped_date })
+      .where('id', company.id);
+  }
   return company;
 }
 

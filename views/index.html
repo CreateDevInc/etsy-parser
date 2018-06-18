@@ -13,6 +13,7 @@
       <v-content>
         <v-container class="pa-5">
           <h1>Query Page</h1>
+          <p>Date Format: YYYY-MM-DD</p>
           <a href="/urls" class="pa-3">To URL management</a>
           <v-flex xs12 sm6 md4>
             <v-radio-group v-model="query.type">
@@ -21,7 +22,8 @@
             <v-flex>
               <v-select :items="companies" item-value="id" item-text="name" v-model="query.company" label="Select Company" single-line>
                 <template slot="item" slot-scope="data">
-                  <v-list-tile-sub-title :class="{redtext: data.item.public_sales}">{{data.item.name}}</v-list-tile-sub-title>
+                  <v-list-tile-sub-title :class="{redtext: !data.item.public_sales && data.item.id != '*'}">{{data.item.name}}{{data.item.first_scraped_date ? ': First Scrape -> ' + data.item.first_scraped_date.slice(0,
+                    10) : ''}}</v-list-tile-sub-title>
                 </template>
               </v-select>
             </v-flex>
@@ -30,7 +32,7 @@
               <v-menu ref="menu_start" :close-on-content-click="false" v-model="menu_start" :nudge-right="40" :return-value.sync="query.start_date"
                 lazy transition="scale-transition" offset-y full-width min-width="290px">
                 <v-text-field slot="activator" v-model="query.start_date" label="Start Date" prepend-icon="event" readonly></v-text-field>
-                <v-date-picker v-model="query.start_date" @input="$refs.menu_start.save(query.start_date)"></v-date-picker>
+                <v-date-picker :min="minDate" v-model="query.start_date" @input="$refs.menu_start.save(query.start_date)"></v-date-picker>
               </v-menu>
             </v-flex>
             <!-- End Date -->
@@ -110,6 +112,19 @@
         computed: {
           queryReady() {
             return !!(this.query.company && this.query.start_date && this.query.end_date);
+          },
+          selectedCompany() {
+            return this.companies.find(x => x.id == this.query.company)
+          },
+          minDate() {
+            if (this.selectedCompany) {
+              if (this.selectedCompany.id != "*") {
+                return this.selectedCompany.first_scraped_date;
+              }
+              return (this.companies.slice(1).reduce((prev, curr) => {
+                return prev.date < curr.date ? prev : curr;
+              })).first_scraped_date;
+            }
           }
         },
         mounted() {
